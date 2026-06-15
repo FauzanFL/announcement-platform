@@ -22,7 +22,7 @@ export default function Login() {
       login(res.data.token, res.data.user)
       void navigate(res.data.user.role === 'admin' ? '/admin' : '/')
     } catch {
-      setError('Login gagal. Periksa kembali username dan password.')
+      setError('Login failed. Check your username and password.')
     } finally {
       setLoading(false)
     }
@@ -35,8 +35,8 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand-500 mb-4">
             <MegaphoneIcon className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100">Masuk ke Papan Info</h1>
-          <p className="text-slate-500 text-sm mt-1">Sistem pengumuman terpusat organisasi</p>
+          <h1 className="text-2xl font-bold text-slate-100">Login to Information Board</h1>
+          <p className="text-slate-500 text-sm mt-1">Centralized announcement board</p>
         </div>
 
         <div className="card p-6">
@@ -50,7 +50,7 @@ export default function Login() {
               <label className="block text-xs font-medium text-slate-400 mb-1.5">Username</label>
               <input
                 className="input-field"
-                placeholder="Masukkan username"
+                placeholder="Enter username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -62,22 +62,22 @@ export default function Login() {
               <input
                 type="password"
                 className="input-field"
-                placeholder="Masukkan password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5">
-              {loading ? <><SpinnerIcon className="w-4 h-4" /> Memproses...</> : 'Masuk'}
+              {loading ? <><SpinnerIcon className="w-4 h-4" /> Processing...</> : 'Login'}
             </button>
           </form>
         </div>
 
         <p className="text-center text-sm text-slate-500 mt-4">
-          Belum punya akun?{' '}
+          Don't have an account?{' '}
           <Link to="/register" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
-            Daftar di sini
+            Register here
           </Link>
         </p>
       </div>

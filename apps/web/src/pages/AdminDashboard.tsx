@@ -6,7 +6,7 @@ import useToastStore from '@/store/toastStore'
 import type { Announcement } from '@/types'
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('id-ID', {
+  new Date(iso).toLocaleDateString('en-US', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 
@@ -39,14 +39,14 @@ function AnnouncementModal({
     try {
       if (editing) {
         await api.put(`/announcements/${editing.id}`, { title, content })
-        toast.success('Pengumuman berhasil diperbarui')
+        toast.success('Announcement updated')
       } else {
         await api.post('/announcements', { title, content })
-        toast.success('Pengumuman berhasil diterbitkan', 'Dikirim ke semua user')
+        toast.success('Announcement created', 'Send to all users')
       }
       onSaved()
     } catch {
-      setError('Gagal menyimpan pengumuman. Coba lagi.')
+      setError('Failed to save announcement. Try again.')
     } finally {
       setLoading(false)
     }
@@ -66,7 +66,7 @@ function AnnouncementModal({
               <MegaphoneIcon className="w-3.5 h-3.5 text-brand-400" />
             </div>
             <h2 className="text-base font-semibold text-slate-100">
-              {editing ? 'Edit Pengumuman' : 'Pengumuman Baru'}
+              {editing ? 'Edit Announcement' : 'New Announcement'}
             </h2>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 transition-colors">
@@ -81,10 +81,10 @@ function AnnouncementModal({
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Judul</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Title</label>
             <input
               className="input-field"
-              placeholder="Judul pengumuman"
+              placeholder="Anouncement title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -92,10 +92,10 @@ function AnnouncementModal({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Isi Pengumuman</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Content</label>
             <textarea
               className="input-field resize-none"
-              placeholder="Tulis isi pengumuman di sini..."
+              placeholder="Write your announcement here..."
               rows={5}
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -103,11 +103,11 @@ function AnnouncementModal({
             />
           </div>
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary">Batal</button>
+            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
             <button type="submit" disabled={loading} className="btn-primary">
               {loading
-                ? <><SpinnerIcon className="w-4 h-4" /> Menyimpan...</>
-                : editing ? 'Simpan Perubahan' : 'Terbitkan'
+                ? <><SpinnerIcon className="w-4 h-4" /> Saving...</>
+                : editing ? 'Save Changes' : 'Publish'
               }
             </button>
           </div>
@@ -167,10 +167,10 @@ export default function AdminDashboard() {
     setDeleting(id)
     try {
       await api.delete(`/announcements/${id}`)
-      toast.success('Pengumuman berhasil dihapus')
+      toast.success('Announcement deleted')
       void fetchAnnouncements()
     } catch {
-      toast.error('Gagal menghapus pengumuman')
+      toast.error('Failed to delete announcement')
     } finally {
       setDeleting(null)
     }
@@ -194,19 +194,19 @@ export default function AdminDashboard() {
               <MegaphoneIcon className="w-5 h-5 text-brand-400" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-100">Kelola Pengumuman</h1>
-              <p className="text-sm text-slate-500">{announcements.length} pengumuman aktif</p>
+              <h1 className="text-xl font-bold text-slate-100">Manage Announcement</h1>
+              <p className="text-sm text-slate-500">{announcements.length} active announcement</p>
             </div>
           </div>
           <button onClick={openCreate} className="btn-primary">
-            <PlusIcon /> Tambah Baru
+            <PlusIcon /> Create New
           </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-          <StatCard label="Total Pengumuman" value={announcements.length} color="text-brand-400"   />
-          <StatCard label="Bulan Ini"        value={countThisMonth}       color="text-emerald-400" />
-          <StatCard label="Hari Ini"         value={countToday}           color="text-amber-400"   />
+          <StatCard label="Total" value={announcements.length} color="text-brand-400"   />
+          <StatCard label="This Month" value={countThisMonth} color="text-emerald-400" />
+          <StatCard label="Today" value={countToday} color="text-amber-400"   />
         </div>
 
         {loading ? (
@@ -216,10 +216,10 @@ export default function AdminDashboard() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-800 mb-4">
               <MegaphoneIcon className="w-8 h-8 text-slate-600" />
             </div>
-            <p className="text-slate-400 font-medium">Belum ada pengumuman</p>
-            <p className="text-slate-600 text-sm mt-1 mb-4">Mulai buat pengumuman pertama</p>
+            <p className="text-slate-400 font-medium">No announcement</p>
+            <p className="text-slate-600 text-sm mt-1 mb-4">Start your first announcement</p>
             <button onClick={openCreate} className="btn-primary mx-auto">
-              <PlusIcon /> Buat Pengumuman Pertama
+              <PlusIcon /> Create Your First Announcement
             </button>
           </div>
         ) : (
@@ -228,13 +228,13 @@ export default function AdminDashboard() {
               <thead>
                 <tr className="border-b border-slate-800">
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Judul
+                    Title
                   </th>
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">
-                    Dibuat
+                    Created At
                   </th>
                   <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Aksi
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
                                      transition-colors disabled:opacity-50"
                         >
                           {deleting === ann.id ? <SpinnerIcon className="w-3 h-3" /> : <TrashIcon />}
-                          Hapus
+                          Delete
                         </button>
                       </div>
                     </td>

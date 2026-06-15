@@ -25,7 +25,7 @@ export default function Register() {
       await api.post('/register', form)
       void navigate('/login')
     } catch {
-      setError('Pendaftaran gagal. Username mungkin sudah digunakan.')
+      setError('Failed to register. Your username is already taken.')
     } finally {
       setLoading(false)
     }
@@ -38,8 +38,8 @@ export default function Register() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand-500 mb-4">
             <MegaphoneIcon className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100">Buat Akun</h1>
-          <p className="text-slate-500 text-sm mt-1">Daftarkan diri untuk mulai menerima pengumuman</p>
+          <h1 className="text-2xl font-bold text-slate-100">Creat Account</h1>
+          <p className="text-slate-500 text-sm mt-1">Register to start receiving announcements</p>
         </div>
 
         <div className="card p-6">
@@ -53,7 +53,7 @@ export default function Register() {
               <label className="block text-xs font-medium text-slate-400 mb-1.5">Username</label>
               <input
                 className="input-field"
-                placeholder="Pilih username"
+                placeholder="Choose username"
                 value={form.username}
                 onChange={handleChange('username')}
                 required
@@ -65,30 +65,23 @@ export default function Register() {
               <input
                 type="password"
                 className="input-field"
-                placeholder="Min. 6 karakter"
+                placeholder="Min. 6 character"
                 value={form.password}
                 onChange={handleChange('password')}
                 required
                 minLength={6}
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">Role</label>
-              <select className="input-field" value={form.role} onChange={handleChange('role')}>
-                <option value="user">User — menerima pengumuman</option>
-                <option value="admin">Admin — mengelola pengumuman</option>
-              </select>
-            </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5">
-              {loading ? <><SpinnerIcon className="w-4 h-4" /> Mendaftarkan...</> : 'Daftar'}
+              {loading ? <><SpinnerIcon className="w-4 h-4" /> Registering...</> : 'Register'}
             </button>
           </form>
         </div>
 
         <p className="text-center text-sm text-slate-500 mt-4">
-          Sudah punya akun?{' '}
+          Have an account?{' '}
           <Link to="/login" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
-            Masuk di sini
+            Login here
           </Link>
         </p>
       </div>

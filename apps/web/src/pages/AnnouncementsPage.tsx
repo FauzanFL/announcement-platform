@@ -7,7 +7,7 @@ import useSSE from '@/hooks/useSSE'
 import type { Announcement } from '@/types'
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('id-ID', {
+  new Date(iso).toLocaleDateString('en-US', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 
@@ -90,8 +90,8 @@ export default function AnnouncementsPage() {
             <MegaphoneIcon className="w-5 h-5 text-brand-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-100">Pengumuman</h1>
-            <p className="text-sm text-slate-500">{announcements.length} pengumuman tersedia</p>
+            <h1 className="text-xl font-bold text-slate-100">Announcement</h1>
+            <p className="text-sm text-slate-500">{announcements.length} announcement available</p>
           </div>
         </div>
 
@@ -102,8 +102,8 @@ export default function AnnouncementsPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-800 mb-4">
               <MegaphoneIcon className="w-8 h-8 text-slate-600" />
             </div>
-            <p className="text-slate-400 font-medium">Belum ada pengumuman</p>
-            <p className="text-slate-600 text-sm mt-1">Pengumuman baru akan muncul di sini secara otomatis</p>
+            <p className="text-slate-400 font-medium">No announcement</p>
+            <p className="text-slate-600 text-sm mt-1">New announcement will appear here automatically</p>
           </div>
         ) : (
           <div className="space-y-3">

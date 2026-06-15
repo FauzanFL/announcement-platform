@@ -55,7 +55,7 @@ export default function Sidebar() {
           <MegaphoneIcon className="w-4 h-4 text-white" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-100">Papan Info</p>
+          <p className="text-sm font-semibold text-slate-100">Information Board</p>
           <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
         </div>
       </div>
@@ -63,14 +63,14 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {isAdmin ? (
-          <NavItem to="/admin" icon={<MegaphoneIcon />} label="Kelola Pengumuman" />
+          <NavItem to="/admin" icon={<MegaphoneIcon />} label="Manage Announcement" />
         ) : (
           <>
-            <NavItem to="/" icon={<MegaphoneIcon />} label="Pengumuman" />
+            <NavItem to="/" icon={<MegaphoneIcon />} label="Announcements" />
             <NavItem
               to="/notifications"
               icon={<BellIcon />}
-              label="Notifikasi"
+              label="Notifications"
               badge={unreadCount}
             />
           </>

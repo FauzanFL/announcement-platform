@@ -40,7 +40,7 @@ function NotifCard({ notif, onMarkRead }: { notif: Notification; onMarkRead: (id
             {!notif.is_read && (
               <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs
                                font-medium bg-amber-400/15 text-amber-400 border border-amber-400/20">
-                Baru
+                New
               </span>
             )}
           </div>
@@ -58,7 +58,7 @@ function NotifCard({ notif, onMarkRead }: { notif: Notification; onMarkRead: (id
                            font-medium transition-colors disabled:opacity-50"
               >
                 {loading ? <SpinnerIcon className="w-3 h-3" /> : <CheckIcon className="w-3 h-3" />}
-                Tandai dibaca
+                Mark as read
               </button>
             )}
           </div>
@@ -131,9 +131,9 @@ export default function NotificationsPage() {
       await api.put('/notifications/read-all')
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
       setUnreadCount(0)
-      toast.success('Semua notifikasi ditandai sudah dibaca')
+      toast.success('All notifications marked as read')
     } catch {
-      toast.error('Gagal memperbarui notifikasi')
+      toast.error('Failed to mark all notifications as read')
     } finally {
       setMarkingAll(false)
     }
@@ -151,9 +151,9 @@ export default function NotificationsPage() {
               <BellIcon className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-100">Notifikasi</h1>
+              <h1 className="text-xl font-bold text-slate-100">Notification</h1>
               <p className="text-sm text-slate-500">
-                {unreadCount > 0 ? `${unreadCount} belum dibaca` : 'Semua sudah dibaca'}
+                {unreadCount > 0 ? `${unreadCount} unread` : 'All read'}
               </p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function NotificationsPage() {
               className="btn-secondary text-xs"
             >
               {markingAll ? <SpinnerIcon className="w-3 h-3" /> : <CheckIcon className="w-3 h-3" />}
-              Tandai semua dibaca
+              Mark all as read
             </button>
           )}
         </div>
@@ -176,15 +176,15 @@ export default function NotificationsPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-800 mb-4">
               <BellIcon className="w-8 h-8 text-slate-600" />
             </div>
-            <p className="text-slate-400 font-medium">Tidak ada notifikasi</p>
-            <p className="text-slate-600 text-sm mt-1">Notifikasi akan masuk saat ada pengumuman baru</p>
+            <p className="text-slate-400 font-medium">No notification</p>
+            <p className="text-slate-600 text-sm mt-1">Notification will appear when there is a new announcement</p>
           </div>
         ) : (
           <div className="space-y-6">
             {unread.length > 0 && (
               <section>
                 <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 px-1">
-                  Belum Dibaca
+                  Unread
                 </p>
                 <div className="space-y-2">
                   {unread.map((n) => <NotifCard key={n.id} notif={n} onMarkRead={markRead} />)}
@@ -194,7 +194,7 @@ export default function NotificationsPage() {
             {read.length > 0 && (
               <section>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-1">
-                  Sudah Dibaca
+                  Read
                 </p>
                 <div className="space-y-2">
                   {read.map((n) => <NotifCard key={n.id} notif={n} onMarkRead={markRead} />)}
