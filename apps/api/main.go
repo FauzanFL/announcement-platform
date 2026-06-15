@@ -4,6 +4,7 @@ import (
 	"announcement-api/internal/config"
 	deliveryHttp "announcement-api/internal/delivery/http"
 	"announcement-api/internal/infra"
+	"announcement-api/internal/infra/seeder"
 	"announcement-api/internal/repository/postgres"
 	redisrepo "announcement-api/internal/repository/redis"
 	"announcement-api/internal/usecase"
@@ -17,6 +18,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect db: %v", err)
 	}
+
+	seeder.Run(db)
 
 	redisClient := infra.NewRedisClient(cfg)
 
