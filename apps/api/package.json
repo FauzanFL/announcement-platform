@@ -1,0 +1,12 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "scripts": {
+    "dev": "go tool air",
+    "build": "go build -o dist/main main.go",
+    "test": "go test ./..."
+  }
+}

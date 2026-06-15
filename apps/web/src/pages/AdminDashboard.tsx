@@ -1,0 +1,290 @@
+import { useEffect, useState, useCallback, type FormEvent } from 'react'
+import Layout from '@/components/Layout'
+import { MegaphoneIcon, PlusIcon, PencilIcon, TrashIcon, XMarkIcon, SpinnerIcon } from '@/components/icons'
+import api from '@/lib/api'
+import useToastStore from '@/store/toastStore'
+import type { Announcement } from '@/types'
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('id-ID', {
+    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="card px-5 py-4">
+      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">{label}</p>
+      <p className={`text-3xl font-bold mt-1 ${color}`}>{value}</p>
+    </div>
+  )
+}
+
+function AnnouncementModal({
+  editing, onClose, onSaved,
+}: {
+  editing: Announcement | null
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [title, setTitle]     = useState(editing?.title ?? '')
+  const [content, setContent] = useState(editing?.content ?? '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+  const toast = useToastStore()
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      if (editing) {
+        await api.put(`/announcements/${editing.id}`, { title, content })
+        toast.success('Pengumuman berhasil diperbarui')
+      } else {
+        await api.post('/announcements', { title, content })
+        toast.success('Pengumuman berhasil diterbitkan', 'Dikirim ke semua user')
+      }
+      onSaved()
+    } catch {
+      setError('Gagal menyimpan pengumuman. Coba lagi.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4
+                 bg-black/60 backdrop-blur-sm animate-fade-in"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="card w-full max-w-lg animate-slide-in">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-brand-500/10 border border-brand-500/20
+                            flex items-center justify-center">
+              <MegaphoneIcon className="w-3.5 h-3.5 text-brand-400" />
+            </div>
+            <h2 className="text-base font-semibold text-slate-100">
+              {editing ? 'Edit Pengumuman' : 'Pengumuman Baru'}
+            </h2>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 transition-colors">
+            <XMarkIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={(e) => { void handleSubmit(e) }} className="p-6 space-y-4">
+          {error && (
+            <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Judul</label>
+            <input
+              className="input-field"
+              placeholder="Judul pengumuman"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Isi Pengumuman</label>
+            <textarea
+              className="input-field resize-none"
+              placeholder="Tulis isi pengumuman di sini..."
+              rows={5}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">Batal</button>
+            <button type="submit" disabled={loading} className="btn-primary">
+              {loading
+                ? <><SpinnerIcon className="w-4 h-4" /> Menyimpan...</>
+                : editing ? 'Simpan Perubahan' : 'Terbitkan'
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function Skeleton() {
+  return (
+    <div className="card overflow-hidden">
+      <div className="divide-y divide-slate-800">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="px-5 py-4 flex items-center gap-4 animate-pulse">
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-slate-800 rounded w-1/2" />
+              <div className="h-3 bg-slate-800 rounded w-3/4" />
+            </div>
+            <div className="h-3 bg-slate-800 rounded w-28 hidden sm:block" />
+            <div className="flex gap-2">
+              <div className="h-7 w-14 bg-slate-800 rounded-lg" />
+              <div className="h-7 w-14 bg-slate-800 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function AdminDashboard() {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [loading, setLoading]             = useState(true)
+  const [showModal, setShowModal]         = useState(false)
+  const [editing, setEditing]             = useState<Announcement | null>(null)
+  const [deleting, setDeleting]           = useState<string | null>(null)
+  const toast = useToastStore()
+
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      const res = await api.get<Announcement[]>('/announcements')
+      setAnnouncements(res.data ?? [])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { void fetchAnnouncements() }, [fetchAnnouncements])
+
+  const openCreate  = () => { setEditing(null); setShowModal(true) }
+  const openEdit    = (ann: Announcement) => { setEditing(ann); setShowModal(true) }
+  const closeModal  = () => { setShowModal(false); setEditing(null) }
+  const handleSaved = () => { closeModal(); void fetchAnnouncements() }
+
+  const handleDelete = async (id: string) => {
+    setDeleting(id)
+    try {
+      await api.delete(`/announcements/${id}`)
+      toast.success('Pengumuman berhasil dihapus')
+      void fetchAnnouncements()
+    } catch {
+      toast.error('Gagal menghapus pengumuman')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  const now = new Date()
+  const countThisMonth = announcements.filter((a) => {
+    const d = new Date(a.created_at)
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  }).length
+  const countToday = announcements.filter(
+    (a) => new Date(a.created_at).toDateString() === now.toDateString()
+  ).length
+
+  return (
+    <Layout>
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20">
+              <MegaphoneIcon className="w-5 h-5 text-brand-400" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-100">Kelola Pengumuman</h1>
+              <p className="text-sm text-slate-500">{announcements.length} pengumuman aktif</p>
+            </div>
+          </div>
+          <button onClick={openCreate} className="btn-primary">
+            <PlusIcon /> Tambah Baru
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+          <StatCard label="Total Pengumuman" value={announcements.length} color="text-brand-400"   />
+          <StatCard label="Bulan Ini"        value={countThisMonth}       color="text-emerald-400" />
+          <StatCard label="Hari Ini"         value={countToday}           color="text-amber-400"   />
+        </div>
+
+        {loading ? (
+          <Skeleton />
+        ) : announcements.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-800 mb-4">
+              <MegaphoneIcon className="w-8 h-8 text-slate-600" />
+            </div>
+            <p className="text-slate-400 font-medium">Belum ada pengumuman</p>
+            <p className="text-slate-600 text-sm mt-1 mb-4">Mulai buat pengumuman pertama</p>
+            <button onClick={openCreate} className="btn-primary mx-auto">
+              <PlusIcon /> Buat Pengumuman Pertama
+            </button>
+          </div>
+        ) : (
+          <div className="card overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-800">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Judul
+                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">
+                    Dibuat
+                  </th>
+                  <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {announcements.map((ann) => (
+                  <tr key={ann.id} className="hover:bg-slate-800/40 transition-colors group">
+                    <td className="px-5 py-4">
+                      <p className="text-sm font-medium text-slate-200 group-hover:text-slate-100 line-clamp-1">
+                        {ann.title}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{ann.content}</p>
+                    </td>
+                    <td className="px-5 py-4 hidden sm:table-cell">
+                      <span className="text-xs text-slate-500 font-mono">
+                        {formatDate(ann.created_at)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openEdit(ann)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs
+                                     font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700
+                                     transition-colors"
+                        >
+                          <PencilIcon /> Edit
+                        </button>
+                        <button
+                          onClick={() => { void handleDelete(ann.id) }}
+                          disabled={deleting === ann.id}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs
+                                     font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10
+                                     transition-colors disabled:opacity-50"
+                        >
+                          {deleting === ann.id ? <SpinnerIcon className="w-3 h-3" /> : <TrashIcon />}
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {showModal && (
+        <AnnouncementModal editing={editing} onClose={closeModal} onSaved={handleSaved} />
+      )}
+    </Layout>
+  )
+}
