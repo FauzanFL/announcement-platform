@@ -39,7 +39,7 @@ func (r *announcementRepo) FindByID(ctx context.Context, id uuid.UUID) (*entity.
 
 func (r *announcementRepo) FindAll(ctx context.Context) ([]entity.Announcement, error) {
 	var announcements []entity.Announcement
-	if err := r.db.WithContext(ctx).Find(&announcements).Error; err != nil {
+	if err := r.db.WithContext(ctx).Order("created_at desc").Find(&announcements).Error; err != nil {
 		return nil, err
 	}
 	return announcements, nil
