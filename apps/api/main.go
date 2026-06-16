@@ -1,3 +1,24 @@
+// @title           Announcement API
+// @version         1.0
+// @description     API for announcement app. Using Server-Sent Events (SSE), RBAC, and real-time notification.
+// @termsOfService  http://swagger.io/terms/
+//
+// @contact.name    API Support
+// @contact.email   support@announcement-app.dev
+//
+// @license.name    MIT
+// @license.url     https://opensource.org/licenses/MIT
+//
+// @host            localhost:8080
+// @BasePath        /api
+//
+// @schemes         http https
+//
+// @securityDefinitions.apikey  BearerAuth
+// @in                          header
+// @name                        Authorization
+// @description                 Input your Bearer token: **Bearer &lt;token&gt;**
+
 package main
 
 import (
@@ -9,6 +30,8 @@ import (
 	redisrepo "announcement-api/internal/repository/redis"
 	"announcement-api/internal/usecase"
 	"log"
+
+	_ "announcement-api/docs"
 )
 
 func main() {
@@ -39,9 +62,10 @@ func main() {
 		UserUC:         userUC,
 		AnnouncementUC: annUC,
 		NotificationUC: notifUC,
-	})
+	}, cfg.APIPort)
 
 	log.Printf("server running on :%s", cfg.APIPort)
+
 	if err := r.Run(":" + cfg.APIPort); err != nil {
 		log.Fatalf("failed to run server: %v", err)
 	}

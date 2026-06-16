@@ -5,10 +5,13 @@ import (
 	"announcement-api/internal/delivery/http/middleware"
 	"announcement-api/internal/domain/entity"
 	"announcement-api/internal/usecase"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Dependencies struct {
@@ -20,7 +23,7 @@ type Dependencies struct {
 	NotificationUC *usecase.NotificationUsecase
 }
 
-func NewRouter(deps Dependencies) *gin.Engine {
+func NewRouter(deps Dependencies, port string) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -41,6 +44,20 @@ func NewRouter(deps Dependencies) *gin.Engine {
 
 	api := r.Group("/api")
 	{
+		api.GET("/docs/*any", func(ctx *gin.Context) {
+			anyParam := ctx.Param("any")
+
+			if anyParam == "" || anyParam == "/" {
+				ctx.Redirect(http.StatusMovedPermanently, "/api/docs/index.html")
+				return
+			}
+
+			ginSwagger.WrapHandler(
+				swaggerFiles.Handler,
+				ginSwagger.URL(fmt.Sprintf("http://localhost:%s/api/docs/doc.json", port)),
+			)(ctx)
+		})
+
 		api.POST("/register", authHandler.Register)
 		api.POST("/login", authHandler.Login)
 

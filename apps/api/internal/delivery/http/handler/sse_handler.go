@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"announcement-api/internal/delivery/http/dto"
 	"announcement-api/internal/delivery/http/middleware"
 	"announcement-api/internal/domain/entity"
 	"announcement-api/internal/usecase"
@@ -23,6 +24,16 @@ func NewSSEHandler(annUC *usecase.AnnouncementUsecase, notifUC *usecase.Notifica
 	return &SSEHandler{annUC: annUC, notifUC: notifUC}
 }
 
+// @Summary     SSE stream real-time
+// @Description Open Server-Sent Events (SSE) connection to sent real-time event. token sent via query parameter. There are two type of events: `announcement` (new/update/delete) and `unread_count` (number of unread notification). Heartbeat sent 15 second as SSE comment.
+// @Tags        SSE
+// @Produce     text/event-stream
+// @Security    BearerAuth
+// @Param       token  query     string  true  "JWT token"  example("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+// @Success     200    {string}  string  "Stream of SSE events"
+// @Failure     401    {object}  dto.ErrorResponse  "Token not valid"
+// @Failure     500    {object}  dto.ErrorResponse  "Streaming not supported"
+// @Router      /stream [get]
 func (h *SSEHandler) Stream(c *gin.Context) {
 	userID := middleware.CurrentUserID(c)
 
@@ -33,7 +44,7 @@ func (h *SSEHandler) Stream(c *gin.Context) {
 
 	flusher, ok := c.Writer.(http.Flusher)
 	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "streaming unsupported"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "streaming unsupported"})
 		return
 	}
 
@@ -41,7 +52,7 @@ func (h *SSEHandler) Stream(c *gin.Context) {
 
 	msgCh, cleanup, err := h.annUC.SubscribeToEvents(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to subscribe"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to subscribe"})
 		return
 	}
 	defer cleanup()
