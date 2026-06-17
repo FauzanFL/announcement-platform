@@ -37,7 +37,7 @@ function NotifCard({
       className={`card overflow-hidden animate-slide-in transition-all duration-200
                      ${!notif.is_read ? "border-amber-400/20 bg-amber-400/5" : ""}`}
     >
-      <div className="px-5 py-4 flex gap-4">
+      <div className="px-4 sm:px-5 py-4 flex gap-3 sm:gap-4">
         <div className="mt-1.5 shrink-0">
           {notif.is_read ? (
             <div className="w-2 h-2 rounded-full bg-slate-700" />
@@ -67,7 +67,7 @@ function NotifCard({
           >
             {notif.content}
           </p>
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center justify-between mt-3 gap-2 flex-wrap">
             <span className="text-xs text-slate-600 font-mono">
               {formatDate(notif.created_at)}
             </span>
@@ -78,7 +78,7 @@ function NotifCard({
                 }}
                 disabled={loading}
                 className="inline-flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300
-                           font-medium transition-colors disabled:opacity-50"
+                           font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
               >
                 {loading ? (
                   <SpinnerIcon className="w-3 h-3" />
@@ -99,8 +99,8 @@ function Skeleton() {
   return (
     <div className="space-y-2">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="card px-5 py-4 animate-pulse">
-          <div className="flex gap-4">
+        <div key={i} className="card px-4 sm:px-5 py-4 animate-pulse">
+          <div className="flex gap-3 sm:gap-4">
             <div className="w-2 h-2 rounded-full bg-slate-700 mt-1.5 shrink-0" />
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-slate-800 rounded w-2/3" />
@@ -183,15 +183,17 @@ export default function NotificationsPage() {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/20">
-              <BellIcon className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400/10 border border-amber-400/20 shrink-0">
+              <BellIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-100">Notification</h1>
-              <p className="text-sm text-slate-500">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold text-slate-100">
+                Notification
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500">
                 {unreadCount > 0 ? `${unreadCount} unread` : "All read"}
               </p>
             </div>
@@ -209,7 +211,8 @@ export default function NotificationsPage() {
               ) : (
                 <CheckIcon className="w-3 h-3" />
               )}
-              Mark all as read
+              <span className="hidden sm:inline">Mark all as read</span>
+              <span className="sm:hidden">Read all</span>
             </button>
           )}
         </div>
@@ -218,8 +221,8 @@ export default function NotificationsPage() {
           <Skeleton />
         ) : notifications.length === 0 ? (
           <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-800 mb-4">
-              <BellIcon className="w-8 h-8 text-slate-600" />
+            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 mb-4">
+              <BellIcon className="w-7 h-7 sm:w-8 sm:h-8 text-slate-600" />
             </div>
             <p className="text-slate-400 font-medium">No notification</p>
             <p className="text-slate-600 text-sm mt-1">
