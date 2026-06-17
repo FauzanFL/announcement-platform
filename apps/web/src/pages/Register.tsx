@@ -46,7 +46,7 @@ export default function Register() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-brand-500 mb-4">
             <MegaphoneIcon className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100">Creat Account</h1>
+          <h1 className="text-2xl font-bold text-slate-100">Create Account</h1>
           <p className="text-slate-500 text-sm mt-1">
             Register to start receiving announcements
           </p>
