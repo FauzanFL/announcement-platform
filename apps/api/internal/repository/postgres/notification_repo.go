@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+  "gorm.io/gorm/clause"
 )
 
 type notificationRepo struct {
@@ -18,52 +19,62 @@ func NewNotificationRepository(db *gorm.DB) repository.NotificationRepository {
 	return &notificationRepo{db: db}
 }
 
-func (r *notificationRepo) CreateOne(ctx context.Context, notif *entity.Notification) error {
-	return r.db.WithContext(ctx).Create(notif).Error
-}
-
-func (r *notificationRepo) CreateBatch(ctx context.Context, notifs []entity.Notification) error {
-	if len(notifs) == 0 {
-		return nil
-	}
-
-	return r.db.WithContext(ctx).Create(&notifs).Error
-}
-
-func (r *notificationRepo) FindByUser(ctx context.Context, userID uuid.UUID) ([]entity.Notification, error) {
-	var notifs []entity.Notification
-	err := r.db.WithContext(ctx).
-		Preload("Announcement").
-		Where("user_id = ?", userID).
-		Order("created_at desc").
-		Find(&notifs).Error
-
-	return notifs, err
-}
-
-func (r *notificationRepo) ExistsForUserAndAnnouncement(ctx context.Context, userID, announcementID uuid.UUID) (bool, error) {
-	var count int64
-	err := r.db.WithContext(ctx).Model(&entity.Notification{}).Where("user_id = ? AND announcement_id = ?", userID, announcementID).Count(&count).Error
-
-	return count > 0, err
-}
-
-func (r *notificationRepo) CountUnread(ctx context.Context, userID uuid.UUID) (int64, error) {
-	var count int64
-	return count, r.db.WithContext(ctx).Model(&entity.Notification{}).Where("user_id = ? AND is_read = ?", userID, false).Count(&count).Error
-}
-
-func (r *notificationRepo) MarkRead(ctx context.Context, id uuid.UUID, userID uuid.UUID) (int64, error) {
-	now := time.Now()
-	result := r.db.WithContext(ctx).Model(&entity.Notification{}).Where("id = ? AND user_id = ?", id, userID).Updates(map[string]interface{}{"is_read": true, "read_at": now})
-
-	return result.RowsAffected, result.Error
+func (r *notificationRepo) MarkRead(ctx context.Context, announcementID uuid.UUID, userID uuid.UUID) error {
+    receipt := entity.Notification{
+        UserID:         userID,
+        AnnouncementID: announcementID,
+        ReadAt:         time.Now(),
+    }
+    return r.db.WithContext(ctx).
+        Clauses(clause.OnConflict{DoNothing: true}).
+        Create(&receipt).Error
 }
 
 func (r *notificationRepo) MarkAllRead(ctx context.Context, userID uuid.UUID) error {
-	return r.db.WithContext(ctx).Model(&entity.Notification{}).Where("user_id = ?", userID).Updates(map[string]interface{}{"is_read": true}).Error
+    now := time.Now()
+    return r.db.WithContext(ctx).Exec(`
+        INSERT INTO notifications (id, user_id, announcement_id, read_at)
+        SELECT gen_random_uuid(), ?, a.id, ?
+        FROM announcements a
+        WHERE NOT EXISTS (
+            SELECT 1 FROM notifications n
+            WHERE n.user_id = ? AND n.announcement_id = a.id
+        )
+    `, userID, now, userID).Error
 }
 
-func (r *notificationRepo) DeleteByAnnouncementID(ctx context.Context, announcementID uuid.UUID) error {
-	return r.db.WithContext(ctx).Where("announcement_id = ?", announcementID).Delete(&entity.Notification{}).Error
+func (r *notificationRepo) IsRead(ctx context.Context, announcementID uuid.UUID, userID uuid.UUID) (bool, error) {
+    var count int64
+    err := r.db.WithContext(ctx).Model(&entity.Notification{}).
+        Where("user_id = ? AND announcement_id = ?", userID, announcementID).
+        Count(&count).Error
+    return count > 0, err
+}
+
+func (r *notificationRepo) ListReadIDs(ctx context.Context, userID uuid.UUID) (map[uuid.UUID]entity.Notification, error) {
+    var receipts []entity.Notification
+    if err := r.db.WithContext(ctx).
+        Where("user_id = ?", userID).
+        Find(&receipts).Error; err != nil {
+        return nil, err
+    }
+
+    result := make(map[uuid.UUID]entity.Notification, len(receipts))
+    for _, r := range receipts {
+        result[r.AnnouncementID] = r
+    }
+    return result, nil
+}
+
+func (r *notificationRepo) CountUnread(ctx context.Context, userID uuid.UUID) (int64, error) {
+    var count int64
+    err := r.db.WithContext(ctx).Raw(`
+        SELECT COUNT(*)
+        FROM announcements a
+        WHERE NOT EXISTS (
+            SELECT 1 FROM notifications n
+            WHERE n.user_id = ? AND n.announcement_id = a.id
+        )
+    `, userID).Scan(&count).Error
+    return count, err
 }

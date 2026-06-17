@@ -20,17 +20,15 @@ const ChannelAnnouncement = "announcement_channel"
 type AnnouncementUsecase struct {
 	annRepo   repository.AnnouncementRepository
 	userRepo  repository.UserRepository
-	notifRepo repository.NotificationRepository
 	pubsub    repository.PubSubRepository
 }
 
 func NewAnnouncementUsecase(
 	annRepo repository.AnnouncementRepository,
 	userRepo repository.UserRepository,
-	notifRepo repository.NotificationRepository,
 	pubsub repository.PubSubRepository,
 ) *AnnouncementUsecase {
-	return &AnnouncementUsecase{annRepo: annRepo, userRepo: userRepo, notifRepo: notifRepo, pubsub: pubsub}
+	return &AnnouncementUsecase{annRepo: annRepo, userRepo: userRepo, pubsub: pubsub}
 }
 
 func (u *AnnouncementUsecase) requireAdmin(ctx context.Context, userID uuid.UUID) (*entity.User, error) {
@@ -54,19 +52,6 @@ func (u *AnnouncementUsecase) Create(ctx context.Context, requesterID uuid.UUID,
 		return nil, err
 	}
 
-	users, err := u.userRepo.FindAllByRole(ctx, entity.RoleUser)
-	if err == nil && len(users) > 0 {
-		notifs := make([]entity.Notification, 0, len(users))
-		for _, user := range users {
-			notifs = append(notifs, entity.Notification{
-				UserID:         user.ID,
-				AnnouncementID: ann.ID,
-				IsRead:         false,
-			})
-		}
-
-		_ = u.notifRepo.CreateBatch(ctx, notifs)
-	}
 
 	u.publishEvent(ctx, entity.AnnouncementEvent{Type: "created", Announcement: ann})
 
@@ -103,8 +88,6 @@ func (u *AnnouncementUsecase) Delete(ctx context.Context, requesterID, announcem
 		return err
 	}
 
-	_ = u.notifRepo.DeleteByAnnouncementID(ctx, announcementID)
-
 	u.publishEvent(ctx, entity.AnnouncementEvent{Type: "deleted", ID: announcementID.String()})
 
 	return nil
@@ -112,6 +95,10 @@ func (u *AnnouncementUsecase) Delete(ctx context.Context, requesterID, announcem
 
 func (u *AnnouncementUsecase) List(ctx context.Context) ([]entity.Announcement, error) {
 	return u.annRepo.FindAll(ctx)
+}
+
+func (u *AnnouncementUsecase) ListWithReadStatus(ctx context.Context, userID uuid.UUID) ([]repository.AnnouncementWithStatus, error) {
+    return u.annRepo.FindAllWithReadStatus(ctx, userID)
 }
 
 func (u *AnnouncementUsecase) Get(ctx context.Context, id uuid.UUID) (*entity.Announcement, error) {
@@ -128,23 +115,6 @@ func (u *AnnouncementUsecase) publishEvent(ctx context.Context, event entity.Ann
 		return
 	}
 	_ = u.pubsub.Publish(ctx, ChannelAnnouncement, payload)
-}
-
-func (u *AnnouncementUsecase) EnsureNotificationExists(ctx context.Context, userID, announcementID uuid.UUID) error {
-	exists, err := u.notifRepo.ExistsForUserAndAnnouncement(ctx, userID, announcementID)
-	if err != nil {
-		return err
-	}
-
-	if !exists {
-		return u.notifRepo.CreateOne(ctx, &entity.Notification{
-			UserID:         userID,
-			AnnouncementID: announcementID,
-			IsRead:         false,
-		})
-	}
-
-	return nil
 }
 
 func (u *AnnouncementUsecase) SubscribeToEvents(ctx context.Context) (<-chan string, func(), error) {

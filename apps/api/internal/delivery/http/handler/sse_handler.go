@@ -76,10 +76,6 @@ func (h *SSEHandler) Stream(c *gin.Context) {
 				continue
 			}
 
-			if event.Type == "created" && event.Announcement != nil {
-				_ = h.annUC.EnsureNotificationExists(ctx, userID, event.Announcement.ID)
-			}
-
 			data, _ := json.Marshal(event)
 			fmt.Fprintf(c.Writer, "event: announcement\ndata: %s\n\n", data)
 			flusher.Flush()

@@ -29,7 +29,7 @@ func NewNotificationHandler(notifUC *usecase.NotificationUsecase) *NotificationH
 // @Failure     500  {object}  dto.ErrorResponse  "Internal server error"
 // @Router      /notifications [get]
 func (h *NotificationHandler) List(c *gin.Context) {
-	notifications, err := h.notifUC.List(c.Request.Context(), middleware.CurrentUserID(c))
+	notifications, err := h.notifUC.ListWithStatus(c.Request.Context(), middleware.CurrentUserID(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to fetch notifications"})
 		return
@@ -63,15 +63,15 @@ func (h *NotificationHandler) UnreadCount(c *gin.Context) {
 // @Tags        Notifications
 // @Produce     json
 // @Security    BearerAuth
-// @Param       id  path      string  true  "Notification UUID"  example("550e8400-e29b-41d4-a716-446655440000")
+// @Param       announcement_id  path      string  true  "Announcement UUID"  example("550e8400-e29b-41d4-a716-446655440000")
 // @Success     200  {object}  dto.MessageResponse
 // @Failure     400  {object}  dto.ErrorResponse  "UUID not valid"
 // @Failure     401  {object}  dto.ErrorResponse  "Token not valid"
 // @Failure     404  {object}  dto.ErrorResponse  "Notification not found"
 // @Failure     500  {object}  dto.ErrorResponse  "Internal server error"
-// @Router      /notifications/{id}/read [put]
+// @Router      /notifications/{announcement_id}/read [put]
 func (h *NotificationHandler) MarkRead(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
+	announcementId, err := uuid.Parse(c.Param("announcement_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid id"})
 		return
@@ -79,7 +79,7 @@ func (h *NotificationHandler) MarkRead(c *gin.Context) {
 
 	userID := middleware.CurrentUserID(c)
 
-	if err := h.notifUC.MarkRead(c.Request.Context(), id, userID); err != nil {
+	if err := h.notifUC.MarkRead(c.Request.Context(), announcementId, userID); err != nil {
 		if err == usecase.ErrNotificationNotFound {
 			c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: err.Error()})
 			return

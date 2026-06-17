@@ -78,8 +78,8 @@ func NewRouter(deps Dependencies, port string) *gin.Engine {
 
 			auth.GET("/notifications", notifHandler.List)
 			auth.GET("/notifications/unread-count", notifHandler.UnreadCount)
-			auth.PUT("/notifications/:id/read", notifHandler.MarkRead)
-			auth.PUT("/notifications/read-all", notifHandler.MarkAllRead)
+			auth.POST("/notifications/:announcement_id/read", notifHandler.MarkRead)
+			auth.POST("/notifications/read-all", notifHandler.MarkAllRead)
 
 			auth.GET("/stream", sseHandler.Stream)
 		}

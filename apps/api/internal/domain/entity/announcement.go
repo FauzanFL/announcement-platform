@@ -14,8 +14,6 @@ type Announcement struct {
 	Creator   User      `gorm:"foreignKey:CreatedBy" json:"creator"`
 	CreatedAt time.Time `json:"created_at" example:"2024-08-17T08:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-08-17T08:00:00Z"`
-
-	Notifications []Notification `gorm:"foreignKey:AnnouncementID;constraint:OnDelete:CASCADE;"`
 }
 
 type AnnouncementEvent struct {

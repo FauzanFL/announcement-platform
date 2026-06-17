@@ -53,8 +53,8 @@ func main() {
 
 	authUC := usecase.NewAuthUsecase(userRepo, cfg.JWTSecret)
 	userUC := usecase.NewUserUsecase(userRepo)
-	annUC := usecase.NewAnnouncementUsecase(annRepo, userRepo, notifRepo, pubsubRepo)
-	notifUC := usecase.NewNotificationUsecase(notifRepo)
+	annUC := usecase.NewAnnouncementUsecase(annRepo, userRepo, pubsubRepo)
+	notifUC := usecase.NewNotificationUsecase(notifRepo, annRepo)
 
 	r := deliveryHttp.NewRouter(deliveryHttp.Dependencies{
 		JWTSecret:      cfg.JWTSecret,

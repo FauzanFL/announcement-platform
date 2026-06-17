@@ -1,63 +1,90 @@
-import { useEffect, useState, useCallback } from 'react'
-import Layout from '@/components/Layout'
-import { BellIcon, CheckIcon, SpinnerIcon } from '@/components/icons'
-import api from '@/lib/api'
-import useNotificationStore from '@/store/notificationStore'
-import useToastStore from '@/store/toastStore'
-import useSSE from '@/hooks/useSSE'
-import type { Notification, UnreadCountResponse } from '@/types'
+import { useEffect, useState, useCallback } from "react";
+import Layout from "@/components/Layout";
+import { BellIcon, CheckIcon, SpinnerIcon } from "@/components/icons";
+import api from "@/lib/api";
+import useNotificationStore from "@/store/notificationStore";
+import useToastStore from "@/store/toastStore";
+import useSSE from "@/hooks/useSSE";
+import type { AnnouncementWithStatus, UnreadCountResponse } from "@/types";
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('id-ID', {
-    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
+  new Date(iso).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-function NotifCard({ notif, onMarkRead }: { notif: Notification; onMarkRead: (id: string) => Promise<void> }) {
-  const [loading, setLoading] = useState(false)
+function NotifCard({
+  notif,
+  onMarkRead,
+}: {
+  notif: AnnouncementWithStatus;
+  onMarkRead: (announcementId: string) => Promise<void>;
+}) {
+  const [loading, setLoading] = useState(false);
 
   const handle = async () => {
-    if (notif.is_read) return
-    setLoading(true)
-    await onMarkRead(notif.id)
-    setLoading(false)
-  }
+    if (notif.is_read) return;
+    setLoading(true);
+    await onMarkRead(notif.id);
+    setLoading(false);
+  };
 
   return (
-    <div className={`card overflow-hidden animate-slide-in transition-all duration-200
-                     ${!notif.is_read ? 'border-amber-400/20 bg-amber-400/5' : ''}`}>
+    <div
+      className={`card overflow-hidden animate-slide-in transition-all duration-200
+                     ${!notif.is_read ? "border-amber-400/20 bg-amber-400/5" : ""}`}
+    >
       <div className="px-5 py-4 flex gap-4">
         <div className="mt-1.5 shrink-0">
-          {notif.is_read
-            ? <div className="w-2 h-2 rounded-full bg-slate-700" />
-            : <div className="w-2 h-2 rounded-full bg-amber-400 ring-4 ring-amber-400/20 animate-pulse" />
-          }
+          {notif.is_read ? (
+            <div className="w-2 h-2 rounded-full bg-slate-700" />
+          ) : (
+            <div className="w-2 h-2 rounded-full bg-amber-400 ring-4 ring-amber-400/20 animate-pulse" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <p className={`text-sm font-semibold ${notif.is_read ? 'text-slate-400' : 'text-slate-100'}`}>
-              {notif.announcement.title}
+            <p
+              className={`text-sm font-semibold ${notif.is_read ? "text-slate-400" : "text-slate-100"}`}
+            >
+              {notif.title}
             </p>
             {!notif.is_read && (
-              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs
-                               font-medium bg-amber-400/15 text-amber-400 border border-amber-400/20">
+              <span
+                className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs
+                               font-medium bg-amber-400/15 text-amber-400 border border-amber-400/20"
+              >
                 New
               </span>
             )}
           </div>
-          <p className={`text-sm mt-1 leading-relaxed line-clamp-2
-                         ${notif.is_read ? 'text-slate-600' : 'text-slate-400'}`}>
-            {notif.announcement.content}
+          <p
+            className={`text-sm mt-1 leading-relaxed line-clamp-2
+                         ${notif.is_read ? "text-slate-600" : "text-slate-400"}`}
+          >
+            {notif.content}
           </p>
           <div className="flex items-center justify-between mt-3">
-            <span className="text-xs text-slate-600 font-mono">{formatDate(notif.created_at)}</span>
+            <span className="text-xs text-slate-600 font-mono">
+              {formatDate(notif.created_at)}
+            </span>
             {!notif.is_read && (
               <button
-                onClick={() => { void handle() }}
+                onClick={() => {
+                  void handle();
+                }}
                 disabled={loading}
                 className="inline-flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300
                            font-medium transition-colors disabled:opacity-50"
               >
-                {loading ? <SpinnerIcon className="w-3 h-3" /> : <CheckIcon className="w-3 h-3" />}
+                {loading ? (
+                  <SpinnerIcon className="w-3 h-3" />
+                ) : (
+                  <CheckIcon className="w-3 h-3" />
+                )}
                 Mark as read
               </button>
             )}
@@ -65,7 +92,7 @@ function NotifCard({ notif, onMarkRead }: { notif: Notification; onMarkRead: (id
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function Skeleton() {
@@ -84,63 +111,75 @@ function Skeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading]             = useState(true)
-  const [markingAll, setMarkingAll]       = useState(false)
-  const { unreadCount, setUnreadCount, latestEvent, clearLatestEvent } = useNotificationStore()
-  const toast = useToastStore()
+  const [notifications, setNotifications] = useState<AnnouncementWithStatus[]>(
+    [],
+  );
+  const [loading, setLoading] = useState(true);
+  const [markingAll, setMarkingAll] = useState(false);
+  const { unreadCount, setUnreadCount, latestEvent, clearLatestEvent } =
+    useNotificationStore();
+  const toast = useToastStore();
 
-  useSSE()
+  useSSE();
 
   const fetchAll = useCallback(async () => {
     try {
       const [notifRes, countRes] = await Promise.all([
-        api.get<Notification[]>('/notifications'),
-        api.get<UnreadCountResponse>('/notifications/unread-count'),
-      ])
-      setNotifications(notifRes.data ?? [])
-      setUnreadCount(countRes.data.unread_count)
+        api.get<AnnouncementWithStatus[]>("/notifications"),
+        api.get<UnreadCountResponse>("/notifications/unread-count"),
+      ]);
+      setNotifications(notifRes.data ?? []);
+      setUnreadCount(countRes.data.unread_count);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [setUnreadCount])
-
-  useEffect(() => { void fetchAll() }, [fetchAll])
+  }, [setUnreadCount]);
 
   useEffect(() => {
-    if (latestEvent) { void fetchAll(); clearLatestEvent() }
-  }, [latestEvent, fetchAll, clearLatestEvent])
+    void fetchAll();
+  }, [fetchAll]);
 
-  const markRead = async (id: string) => {
-    try {
-      await api.put(`/notifications/${id}/read`)
-      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n))
-      setUnreadCount(Math.max(0, unreadCount - 1))
-    } catch {
-      toast.error('Gagal menandai notifikasi')
+  useEffect(() => {
+    if (latestEvent) {
+      void fetchAll();
+      clearLatestEvent();
     }
-  }
+  }, [latestEvent, fetchAll, clearLatestEvent]);
+
+  const markRead = async (announcementID: string) => {
+    try {
+      await api.post(`/notifications/${announcementID}/read`);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === announcementID ? { ...n, is_read: true } : n,
+        ),
+      );
+      setUnreadCount(Math.max(0, unreadCount - 1));
+    } catch {
+      toast.error("Failed to mark notification as read");
+    }
+  };
 
   const markAllRead = async () => {
-    setMarkingAll(true)
+    setMarkingAll(true);
     try {
-      await api.put('/notifications/read-all')
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-      setUnreadCount(0)
-      toast.success('All notifications marked as read')
+      await api.post("/notifications/read-all");
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+      toast.success("All notifications marked as read");
     } catch {
-      toast.error('Failed to mark all notifications as read')
+      toast.error("Failed to mark all notifications as read");
     } finally {
-      setMarkingAll(false)
+      setMarkingAll(false);
     }
-  }
+  };
 
-  const unread = notifications.filter((n) => !n.is_read)
-  const read   = notifications.filter((n) => n.is_read)
+  const unread = notifications.filter((n) => !n.is_read);
+  const read = notifications.filter((n) => n.is_read);
 
   return (
     <Layout>
@@ -153,17 +192,23 @@ export default function NotificationsPage() {
             <div>
               <h1 className="text-xl font-bold text-slate-100">Notification</h1>
               <p className="text-sm text-slate-500">
-                {unreadCount > 0 ? `${unreadCount} unread` : 'All read'}
+                {unreadCount > 0 ? `${unreadCount} unread` : "All read"}
               </p>
             </div>
           </div>
           {unreadCount > 0 && (
             <button
-              onClick={() => { void markAllRead() }}
+              onClick={() => {
+                void markAllRead();
+              }}
               disabled={markingAll}
               className="btn-secondary text-xs"
             >
-              {markingAll ? <SpinnerIcon className="w-3 h-3" /> : <CheckIcon className="w-3 h-3" />}
+              {markingAll ? (
+                <SpinnerIcon className="w-3 h-3" />
+              ) : (
+                <CheckIcon className="w-3 h-3" />
+              )}
               Mark all as read
             </button>
           )}
@@ -177,7 +222,9 @@ export default function NotificationsPage() {
               <BellIcon className="w-8 h-8 text-slate-600" />
             </div>
             <p className="text-slate-400 font-medium">No notification</p>
-            <p className="text-slate-600 text-sm mt-1">Notification will appear when there is a new announcement</p>
+            <p className="text-slate-600 text-sm mt-1">
+              Notification will appear when there is a new announcement
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -187,7 +234,9 @@ export default function NotificationsPage() {
                   Unread
                 </p>
                 <div className="space-y-2">
-                  {unread.map((n) => <NotifCard key={n.id} notif={n} onMarkRead={markRead} />)}
+                  {unread.map((n) => (
+                    <NotifCard key={n.id} notif={n} onMarkRead={markRead} />
+                  ))}
                 </div>
               </section>
             )}
@@ -197,7 +246,9 @@ export default function NotificationsPage() {
                   Read
                 </p>
                 <div className="space-y-2">
-                  {read.map((n) => <NotifCard key={n.id} notif={n} onMarkRead={markRead} />)}
+                  {read.map((n) => (
+                    <NotifCard key={n.id} notif={n} onMarkRead={markRead} />
+                  ))}
                 </div>
               </section>
             )}
@@ -205,5 +256,5 @@ export default function NotificationsPage() {
         )}
       </div>
     </Layout>
-  )
+  );
 }

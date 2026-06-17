@@ -44,3 +44,45 @@ func (r *announcementRepo) FindAll(ctx context.Context) ([]entity.Announcement, 
 	}
 	return announcements, nil
 }
+
+func (r *announcementRepo) FindAllWithReadStatus(ctx context.Context, userID uuid.UUID) ([]repository.AnnouncementWithStatus, error) {
+    type row struct {
+        entity.Announcement
+        IsRead bool
+    }
+
+    var rows []row
+    err := r.db.WithContext(ctx).Raw(`
+        SELECT a.*, 
+               CASE WHEN n.user_id IS NOT NULL THEN true ELSE false END AS is_read
+        FROM announcements a
+        LEFT JOIN notifications n
+               ON n.announcement_id = a.id AND n.user_id = ?
+        ORDER BY a.created_at DESC
+    `, userID).Scan(&rows).Error
+    if err != nil {
+        return nil, err
+    }
+
+    result := make([]repository.AnnouncementWithStatus, len(rows))
+    for i, r := range rows {
+        result[i] = repository.AnnouncementWithStatus{
+            Announcement: r.Announcement,
+            IsRead:       r.IsRead,
+        }
+    }
+    return result, nil
+}
+
+func (r *announcementRepo) CountUnreadByUser(ctx context.Context, userID uuid.UUID) (int64, error) {
+    var count int64
+    err := r.db.WithContext(ctx).Raw(`
+        SELECT COUNT(*)
+        FROM announcements a
+        WHERE NOT EXISTS (
+            SELECT 1 FROM notifications n
+            WHERE n.user_id = ? AND n.announcement_id = a.id
+        )
+    `, userID).Scan(&count).Error
+    return count, err
+}
