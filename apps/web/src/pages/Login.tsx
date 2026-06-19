@@ -22,7 +22,7 @@ export default function Login() {
         username,
         password,
       });
-      login(res.data.token, res.data.user);
+      login(res.data.user);
       void navigate(res.data.user.role === "admin" ? "/admin" : "/");
     } catch {
       setError("Login failed. Check your username and password.");

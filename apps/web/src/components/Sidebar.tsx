@@ -3,6 +3,7 @@ import useAuthStore from "@/store/authStore";
 import useNotificationStore from "@/store/notificationStore";
 import { MegaphoneIcon, BellIcon, LogoutIcon, XMarkIcon } from "./icons";
 import { useState } from "react";
+import api from "@/lib/api";
 
 interface NavItemProps {
   to: string;
@@ -41,30 +42,6 @@ function NavItem({ to, icon, label, badge, onClick }: NavItemProps) {
   );
 }
 
-function BottomNavItem({ to, icon, label, badge }: NavItemProps) {
-  return (
-    <NavLink
-      to={to}
-      end
-      className={({ isActive }) =>
-        `flex flex-col items-center justify-center gap-1 flex-1 py-2 text-xs font-medium
-         transition-colors duration-150 relative
-         ${isActive ? "text-brand-400" : "text-slate-500"}`
-      }
-    >
-      <span className="relative">
-        {icon}
-        {badge != null && badge > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-amber-400 text-slate-900 text-[10px] font-bold">
-            {badge > 99 ? "99+" : badge}
-          </span>
-        )}
-      </span>
-      <span>{label}</span>
-    </NavLink>
-  );
-}
-
 function HamburgerIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg
@@ -89,9 +66,14 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await api.post("/logout");
+    } finally {
+      logout();
+      void navigate("/login");
+      setDrawerOpen(false);
+    }
   };
 
   const isAdmin = user?.role === "admin";
@@ -140,7 +122,9 @@ export default function Sidebar() {
             <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={() => {
+              void handleLogout();
+            }}
             className="text-slate-500 hover:text-red-400 transition-colors shrink-0"
             title="Logout"
           >

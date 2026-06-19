@@ -34,7 +34,6 @@ export interface AnnouncementEvent {
 }
 
 export interface AuthResponse {
-  token: string;
   user: User;
 }
 

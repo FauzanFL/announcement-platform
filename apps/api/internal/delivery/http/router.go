@@ -5,6 +5,7 @@ import (
 	"announcement-api/internal/delivery/http/middleware"
 	"announcement-api/internal/domain/entity"
 	"announcement-api/internal/usecase"
+	"announcement-api/internal/config"
 	"fmt"
 	"net/http"
 
@@ -21,16 +22,19 @@ type Dependencies struct {
 	UserUC         *usecase.UserUsecase
 	AnnouncementUC *usecase.AnnouncementUsecase
 	NotificationUC *usecase.NotificationUsecase
+
+	Cfg *config.Config
 }
 
-func NewRouter(deps Dependencies, port string) *gin.Engine {
+func NewRouter(deps Dependencies) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
+		AllowOrigins: 	 deps.Cfg.AllowOrigins,
 		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:    []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:   []string{"Content-Length"},
+		AllowCredentials: true,
 	}))
 
 	authHandler := handler.NewAuthHandler(deps.AuthUC)
@@ -54,12 +58,13 @@ func NewRouter(deps Dependencies, port string) *gin.Engine {
 
 			ginSwagger.WrapHandler(
 				swaggerFiles.Handler,
-				ginSwagger.URL(fmt.Sprintf("http://localhost:%s/api/docs/doc.json", port)),
+				ginSwagger.URL(fmt.Sprintf("http://%s:%s/api/docs/doc.json", deps.Cfg.APIHost, deps.Cfg.APIPort)),
 			)(ctx)
 		})
 
 		api.POST("/register", authHandler.Register)
 		api.POST("/login", authHandler.Login)
+		api.POST("/logout", authHandler.Logout)
 
 		auth := api.Group("/")
 		auth.Use(middleware.AuthRequired(deps.JWTSecret))

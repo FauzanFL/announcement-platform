@@ -12,7 +12,6 @@ type MessageResponse struct {
 
 type AuthResponse struct {
 	Message string       `json:"message" example:"operation success"`
-	Token   string       `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 	User    UserResponse `json:"user"`
 }
 

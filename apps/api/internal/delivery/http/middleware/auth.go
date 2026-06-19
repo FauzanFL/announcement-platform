@@ -4,7 +4,6 @@ import (
 	"announcement-api/internal/domain/entity"
 	"announcement-api/internal/usecase"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -14,24 +13,14 @@ import (
 const (
 	CtxKeyUserID = "user_id"
 	CtxKeyUser   = "current_user"
+	CookieName   = "auth_token"
 )
 
 func AuthRequired(jwtSecret string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		header := ctx.GetHeader("Authorization")
-		tokenStr := ""
-
-		if header != "" {
-			parts := strings.Split(header, " ")
-			if len(parts) == 2 && parts[0] == "Bearer" {
-				tokenStr = parts[1]
-			}
-		}
-		if tokenStr == "" {
-			tokenStr = ctx.Query("token")
-		}
-		if tokenStr == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+		tokenStr, err := ctx.Cookie(CookieName)
+		if err != nil || tokenStr == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing auth cookie"})
 			return
 		}
 

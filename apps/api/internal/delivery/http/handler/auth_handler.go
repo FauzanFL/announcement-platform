@@ -9,6 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	cookieName     = "auth_token"
+	cookieMaxAge   = 60 * 60 * 24 // 24 hours
+	cookiePath     = "/"
+	cookieHTTPOnly = true
+	cookieSecure   = false // set true if in production 
+)
+
 type AuthHandler struct {
 	authUC *usecase.AuthUsecase
 }
@@ -26,6 +34,19 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+}
+
+func setCookie(c *gin.Context, value string, maxAge int) {
+	c.SetSameSite(http.SameSiteLaxMode) // Lax for dev, Strict if in production
+	c.SetCookie(
+		cookieName,
+		value,
+		maxAge,
+		cookiePath,
+		"",    // domain empty = current host
+		false, // Secure: false for dev HTTP, true if production HTTPS
+		true,  // HttpOnly: true
+	)
 }
 
 // @Summary     Daftarkan akun baru
@@ -87,13 +108,27 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	setCookie(c, token, cookieMaxAge)
+
 	c.JSON(http.StatusOK, dto.AuthResponse{
 		Message: "Login success",
-		Token:   token,
 		User: dto.UserResponse{
 			ID:       user.ID,
 			Username: user.Username,
 			Role:     string(user.Role),
 		},
 	})
+}
+
+// Logout godoc
+//
+// @Summary     Logout user
+// @Description Delete auth cookie
+// @Tags        Auth
+// @Produce     json
+// @Success     200  {object}  dto.MessageResponse
+// @Router      /logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+	setCookie(c, "", -1)
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "logged out"})
 }

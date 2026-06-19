@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 type Config struct {
 	DBHost     string
@@ -12,6 +15,8 @@ type Config struct {
 	RedisPort  string
 	JWTSecret  string
 	APIPort    string
+	APIHost     string
+	AllowOrigins []string
 }
 
 func Load() *Config {
@@ -25,7 +30,21 @@ func Load() *Config {
 		RedisPort:  getEnv("REDIS_PORT", "6379"),
 		JWTSecret:  getEnv("JWT_SECRET", "secret"),
 		APIPort:    getEnv("API_PORT", "8080"),
+		APIHost:    getEnv("API_HOST", "localhost"),
+		AllowOrigins: parseOrigins(getEnv("ALLOW_ORIGINS", "http://localhost:5173")),
 	}
+}
+
+func parseOrigins(raw string) []string {
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			origins = append(origins, trimmed)
+		}
+	}
+	return origins
 }
 
 func getEnv(key, fallback string) string {

@@ -57,12 +57,13 @@ func main() {
 	notifUC := usecase.NewNotificationUsecase(notifRepo, annRepo)
 
 	r := deliveryHttp.NewRouter(deliveryHttp.Dependencies{
+		Cfg:            cfg,
 		JWTSecret:      cfg.JWTSecret,
 		AuthUC:         authUC,
 		UserUC:         userUC,
 		AnnouncementUC: annUC,
 		NotificationUC: notifUC,
-	}, cfg.APIPort)
+	})
 
 	log.Printf("server running on :%s", cfg.APIPort)
 
